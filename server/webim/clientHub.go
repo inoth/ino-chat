@@ -35,11 +35,13 @@ func (hub *ClientHub) Run() {
 			delete(hub.clients, client.user)
 			close(client.send)
 		case message := <-hub.broadcast:
-			sendMessage(message)
+			sendMessage(hub, message)
 		}
 	}
 }
 
-func sendMessage(msg *MsgBody) {
-
+func sendMessage(hub *ClientHub, msg *MsgBody) {
+	for _, u := range msg.target {
+		hub.clients[u].send <- msg.ToJson()
+	}
 }
