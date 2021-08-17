@@ -85,13 +85,14 @@ func (c *Client) write() {
 func Register(uid string, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-
 		return
 	}
 	client := &Client{
 		user: uid,
+		hub:  Instance(),
 		conn: conn,
 		send: make(chan []byte, 512),
 	}
+	client.hub.register <- client
 	go client.write()
 }
