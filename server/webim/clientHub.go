@@ -1,6 +1,9 @@
 package webim
 
-import "sync"
+import (
+	"sync"
+	"time"
+)
 
 var (
 	once sync.Once
@@ -31,6 +34,13 @@ func (hub *ClientHub) Run() {
 		select {
 		case client := <-hub.register:
 			hub.clients[client.user] = client
+			hub.clients[client.user].send <- (&MsgBody{
+				msgType:   0, // system msg
+				target:    []string{client.user},
+				Uid:       "system",
+				Timestamp: time.Now().Unix(),
+				Body:      "Connection successful.",
+			}).ToJson()
 		case client := <-hub.unregister:
 			delete(hub.clients, client.user)
 			close(client.send)
@@ -42,6 +52,8 @@ func (hub *ClientHub) Run() {
 
 func sendMessage(hub *ClientHub, msg *MsgBody) {
 	for _, u := range msg.target {
-		hub.clients[u].send <- msg.ToJson()
+		if client, ok := hub.clients[u]; ok {
+			client.send <- msg.ToJson()
+		}
 	}
 }

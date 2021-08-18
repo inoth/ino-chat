@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/gorilla/websocket"
+	"github.com/sirupsen/logrus"
 )
 
 const (
@@ -85,6 +86,7 @@ func (c *Client) write() {
 func Register(uid string, w http.ResponseWriter, r *http.Request) {
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
+		logrus.Error(uid, "创建连接失败：", err.Error())
 		return
 	}
 	client := &Client{

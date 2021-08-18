@@ -10,16 +10,27 @@ const (
 )
 
 type MsgBody struct {
-	msgType   int
+	msgType   int32
 	target    []string
 	Uid       string `json:"from"`
-	Timestamp int32  `json:"timestamp"`
+	Timestamp int64  `json:"timestamp"`
 	Body      string `json:"msg"`
 }
 
 func (c *MsgBody) ToJson() []byte {
 	if by, err := json.Marshal(c); err == nil {
 		return by
+	}
+	return nil
+}
+
+func SendMessage(msgType int32, timestamp int64, target []string, fromUser, body string) error {
+	Instance().broadcast <- &MsgBody{
+		msgType:   msgType,
+		target:    target,
+		Timestamp: timestamp,
+		Uid:       fromUser,
+		Body:      body,
 	}
 	return nil
 }
