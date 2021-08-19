@@ -2,8 +2,14 @@ package service
 
 import (
 	"encoding/json"
+	"inochat/server/cache"
+	"inochat/server/config"
+	"inochat/server/webim"
+	"time"
 
 	"github.com/nsqio/go-nsq"
+	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 )
 
 type RegisteredConsumer interface {
@@ -39,9 +45,20 @@ func (c *MessageNsq) HandleMessage(msg *nsq.Message) error {
 	case 0: // 单对单发送
 		target = append(target, data.Target)
 	case 1: // 发送至房间
-
+		users, err := cache.SMembers(config.ROOMMEMBERS + data.Target)
+		if err != nil {
+			logrus.Error(err.Error())
+			break
+		}
+		target = append(target, users...)
 	}
-	// webim.SendMessage()
+	if len(target) <= 0 {
+		return nil
+	}
+	err := webim.SendMessage(int32(data.MsgType), time.Now().Unix(), target, data.FromUser, data.Body)
+	if err != nil {
+		return errors.Wrap(err, "")
+	}
 	return nil
 }
 

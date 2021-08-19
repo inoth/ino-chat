@@ -3,3 +3,4 @@ Redis:
   Host: 
   Passwd: 
 Consul: 
+Nsq: 

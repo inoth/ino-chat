@@ -9,6 +9,10 @@ import (
 	"gopkg.in/yaml.v2"
 )
 
+const (
+	ROOMMEMBERS = "WEBIM:ROOM:"
+)
+
 var (
 	once sync.Once
 	conf *Config
@@ -21,6 +25,7 @@ type Config struct {
 		Passwd string `yaml:"Passwd"`
 	} `yaml:"Redis"`
 	Consul string `yaml:"Consul"`
+	Nsq    string `yaml:"Nsq"`
 }
 
 func Instance() *Config {

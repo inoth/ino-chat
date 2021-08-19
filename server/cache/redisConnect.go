@@ -99,6 +99,7 @@ func Len(key string) int {
 	return cache
 }
 
+// list
 func LPush(key string, val ...string) error {
 	conn := GetConn()
 	defer conn.Close()
@@ -119,4 +120,57 @@ func RPop(key string) (string, error) {
 	return cache, nil
 }
 
-// 再加一个HASH函数
+// set
+func SAdd(key string, val ...string) error {
+	conn := GetConn()
+	defer conn.Close()
+	_, err := conn.Do("SADD", key, val)
+	if err != nil {
+		return errors.Wrap(err, "")
+	}
+	return nil
+}
+
+// 查看成员数
+func Scard(key string) int {
+	conn := GetConn()
+	defer conn.Close()
+	cache, err := redis.Int(conn.Do("SCARD", key))
+	if err != nil {
+		return 0
+	}
+	return cache
+}
+
+// 判断是否存在于当前集合中
+func SISMember(key string) int {
+	conn := GetConn()
+	defer conn.Close()
+	cache, err := redis.Int(conn.Do("SISMEMBER", key))
+	if err != nil {
+		return 0
+	}
+	return cache
+}
+
+// 获取成员列表
+func SMembers(key string) ([]string, error) {
+	conn := GetConn()
+	defer conn.Close()
+	cache, err := redis.Strings(conn.Do("SMEMBERS", key))
+	if err != nil {
+		return nil, errors.Wrap(err, "")
+	}
+	return cache, nil
+}
+
+// 删除一个成员
+func SRem(key string) error {
+	conn := GetConn()
+	defer conn.Close()
+	_, err := conn.Do("SREM", key)
+	if err != nil {
+		return errors.Wrap(err, "")
+	}
+	return nil
+}

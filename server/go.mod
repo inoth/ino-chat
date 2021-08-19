@@ -1,6 +1,6 @@
 module inochat/server
 
-go 1.16
+go 1.15
 
 require (
 	github.com/asim/go-micro/v3 v3.5.2
