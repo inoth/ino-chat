@@ -1,21 +1,26 @@
 package router
 
-import "github.com/gin-gonic/gin"
+import (
+	col "inochat/client/controller"
 
-func InitClient() {
+	"github.com/gin-gonic/gin"
+)
+
+func ServeStart() {
 	r := gin.New()
 	api := r.Group("/api")
 	{
 		api.POST("/init", func(c *gin.Context) {
-			c.String(200, "init user")
+			c.String(200, "init connect.")
 		})
-		api.POST("/msg/send")
 	}
 	room := api.Group("/room")
 	{
-		room.POST("/create")
-		room.POST("/join/:rid")
-		room.POST("/exit")
+		room.GET("", col.RoomList) // 房间列表
+		room.POST("/msg")          // 发送消息
+		room.POST("/create")       // 创建房间
+		room.POST("/join/:rid")    // 加入放假
+		room.POST("/exit")         // 退出房间
 	}
 	r.Run(":9978")
 }
