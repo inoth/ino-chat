@@ -9,10 +9,13 @@ func InitClient() {
 		api.POST("/init", func(c *gin.Context) {
 			c.String(200, "init user")
 		})
-		api.POST("/room/create")
-		api.POST("/room/join/:rid")
-		api.POST("/room/exit")
 		api.POST("/msg/send")
+	}
+	room := api.Group("/room")
+	{
+		room.POST("/create")
+		room.POST("/join/:rid")
+		room.POST("/exit")
 	}
 	r.Run(":9978")
 }
