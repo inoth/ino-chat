@@ -3,6 +3,8 @@ module inochat/client
 go 1.15
 
 require (
+	github.com/asim/go-micro/v3 v3.5.2
+	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/gin-gonic/gin v1.7.4
 	github.com/go-playground/validator/v10 v10.9.0 // indirect
 	github.com/golang/protobuf v1.5.2 // indirect

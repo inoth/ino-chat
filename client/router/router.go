@@ -1,18 +1,23 @@
 package router
 
 import (
+	"inochat/client/config"
 	col "inochat/client/controller"
+	mid "inochat/client/middleware"
 
 	"github.com/gin-gonic/gin"
 )
 
 func ServeStart() {
 	r := gin.New()
-	api := r.Group("/api")
+
+	r.GET("/health", func(c *gin.Context) {
+		c.String(200, "ok")
+	})
+
+	api := r.Group("/api", mid.AuthMiddleware)
 	{
-		api.POST("/init", func(c *gin.Context) {
-			c.String(200, "init connect.")
-		})
+		api.POST("/init", col.InitUser)
 	}
 	room := api.Group("/room")
 	{
@@ -22,5 +27,5 @@ func ServeStart() {
 		room.POST("/join/:rid")    // 加入放假
 		room.POST("/exit")         // 退出房间
 	}
-	r.Run(":9978")
+	r.Run(config.Instance().ServerPort)
 }

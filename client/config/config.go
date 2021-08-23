@@ -10,8 +10,8 @@ import (
 )
 
 const (
-	ROOMS       = "WEBIM:ROOMS"
-	ROOMMEMBERS = "WEBIM:ROOM:"
+	ROOMS       = "INOCHAT:ROOMS"
+	ROOMMEMBERS = "INOCHAT:ROOM:"
 )
 
 var (
