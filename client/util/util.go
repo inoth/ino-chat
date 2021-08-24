@@ -1,5 +1,8 @@
 package util
 
-func RandomStr() string {
-	return ""
+import "github.com/google/uuid"
+
+func RandomID() string {
+	id, _ := uuid.NewUUID()
+	return id.String()
 }

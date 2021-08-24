@@ -15,11 +15,11 @@ func ServeStart() {
 		c.String(200, "ok")
 	})
 
-	api := r.Group("/api", mid.AuthMiddleware)
+	api := r.Group("/api")
 	{
 		api.POST("/init", col.InitUser)
 	}
-	room := api.Group("/room")
+	room := api.Group("/room", mid.AuthMiddleware)
 	{
 		room.GET("", col.RoomList) // 房间列表
 		room.POST("/msg")          // 发送消息

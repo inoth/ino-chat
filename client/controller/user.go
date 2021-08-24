@@ -19,7 +19,7 @@ func InitUser(c *gin.Context) {
 		c.JSON(res.PARAMETERERR, res.ParamErr("param err"))
 		return
 	}
-	uid := util.RandomStr()
+	uid := util.RandomID()
 	sign, err := mid.CreateToken(uid, req.UserName)
 	if err != nil {
 		logrus.Errorf("%v", err)
@@ -31,8 +31,4 @@ func InitUser(c *gin.Context) {
 		Uid:      uid,
 		UserName: req.UserName,
 	}))
-}
-
-func RoomList(c *gin.Context) {
-
 }
