@@ -195,6 +195,12 @@ func HSet(key string, val map[string]interface{}) error {
 	return nil
 }
 
-func HGetAll() {
-
+func HGetAll(key string) (map[string]string, error) {
+	conn := GetConn()
+	defer conn.Close()
+	r, err := redis.StringMap(conn.Do(key))
+	if err != nil {
+		return nil, errors.Wrap(err, "")
+	}
+	return r, nil
 }

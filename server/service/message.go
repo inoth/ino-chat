@@ -28,11 +28,11 @@ func (c *MessageNsq) GetChannel() string { return c.Channel }
 func (c *MessageNsq) GetAddress() string { return c.Address }
 
 type MessageNsqBody struct {
-	MsgType    int
-	TargetType int
-	Target     string
-	FromUser   string
-	Body       string
+	MsgType    int    `json:"msgType"`
+	TargetType int    `json:"targetType"`
+	Target     string `json:"target"`
+	FromUser   string `json:"fromUser"`
+	Body       string `json:"body"`
 }
 
 func (c *MessageNsq) HandleMessage(msg *nsq.Message) error {

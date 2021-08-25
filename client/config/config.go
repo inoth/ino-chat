@@ -10,7 +10,9 @@ import (
 )
 
 const (
-	ROOMS       = "INOCHAT:ROOMS"
+	// 房间列表
+	ROOMS = "INOCHAT:ROOMS"
+	// 房间内成员
 	ROOMMEMBERS = "INOCHAT:ROOM:"
 )
 
