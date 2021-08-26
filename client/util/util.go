@@ -17,3 +17,9 @@ func ToJson(obj interface{}) []byte {
 	}
 	return nil
 }
+func ToJsonStr(obj interface{}) string {
+	if byt, err := json.Marshal(obj); err == nil {
+		return string(byt)
+	}
+	return ""
+}

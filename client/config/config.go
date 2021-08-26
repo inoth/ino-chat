@@ -12,6 +12,8 @@ import (
 const (
 	// 房间列表
 	ROOMS = "INOCHAT:ROOMS"
+	// 房间详情
+	ROOMINFO = "INOCHAT:ROOMINFO:"
 	// 房间内成员
 	ROOMMEMBERS = "INOCHAT:ROOM:"
 )
@@ -27,8 +29,9 @@ type Config struct {
 		Host   string `yaml:"Host"`
 		Passwd string `yaml:"Passwd"`
 	} `yaml:"Redis"`
-	Consul string `yaml:"Consul"`
-	Nsq    string `yaml:"Nsq"`
+	MongoDB string `yaml:"MongoDB"`
+	Consul  string `yaml:"Consul"`
+	Nsq     string `yaml:"Nsq"`
 }
 
 func Instance() *Config {

@@ -2,5 +2,6 @@ ServerPort: :9978
 Redis:
   Host: 
   Passwd: 
+MongoDB: 
 Consul: 
 Nsq: 

@@ -98,6 +98,16 @@ func Len(key string) int {
 	return r
 }
 
+func Exists(key string) bool {
+	conn := GetConn()
+	defer conn.Close()
+	r, _ := redis.Int(conn.Do("EXISTS", key))
+	if r <= 0 {
+		return false
+	}
+	return true
+}
+
 //------------------LIST----------------------
 func LPush(key string, val ...string) error {
 	conn := GetConn()
@@ -142,10 +152,10 @@ func Scard(key string) int {
 }
 
 // 判断是否存在于当前集合中
-func SISMember(key string) int {
+func SISMember(key, member string) int {
 	conn := GetConn()
 	defer conn.Close()
-	r, err := redis.Int(conn.Do("SISMEMBER", key))
+	r, err := redis.Int(conn.Do("SISMEMBER", key, member))
 	if err != nil {
 		return 0
 	}
@@ -164,10 +174,10 @@ func SMembers(key string) ([]string, error) {
 }
 
 // 删除一个成员
-func SRem(key string) error {
+func SRem(key, member string) error {
 	conn := GetConn()
 	defer conn.Close()
-	_, err := conn.Do("SREM", key)
+	_, err := conn.Do("SREM", key, member)
 	if err != nil {
 		return errors.Wrap(err, "")
 	}
