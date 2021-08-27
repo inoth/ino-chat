@@ -6,10 +6,12 @@ import (
 	"inochat/client/db/model"
 	"os"
 
+	"go.mongodb.org/mongo-driver/bson"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 
 	"github.com/pkg/errors"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 )
 
@@ -50,31 +52,61 @@ func GetDb() *mongo.Database {
 }
 
 func FindOne(filter interface{}, res model.IEntity) error {
-	if err := mogo.Collection(res.ColName()).FindOne(context.TODO(), filter).Decode(res); err != nil {
+	if err := mogo.Collection(res.Col()).FindOne(context.TODO(), filter).Decode(res); err != nil {
 		return errors.Wrap(err, "")
 	}
 	return nil
 }
 
-func Find(filter interface{}, res model.IEntity) ([]model.IEntity, error) {
+func FindAll(filter interface{}, res model.IEntity) ([]bson.M, error) {
 	ctx := context.TODO()
-	cur, err := mogo.Collection(res.ColName()).Find(ctx, filter)
+	cur, err := mogo.Collection(res.Col()).Find(ctx, filter)
 	if err != nil {
 		return nil, errors.Wrap(err, "")
 	}
-	r := make([]model.IEntity, 0)
+	r := make([]bson.M, 0)
 	defer cur.Close(ctx)
 	for cur.Next(ctx) {
-		if err = cur.Decode(&res); err != nil {
+		var tmp bson.M
+		if err = cur.Decode(&tmp); err != nil {
 			log.Fatal(err)
 		}
-		r = append(r, res)
+		r = append(r, tmp)
 	}
 	return r, nil
 }
 
-func Create(entity model.IEntity) error {
-	if _, err := mogo.Collection(entity.ColName()).InsertOne(context.TODO(), entity); err != nil {
+func Create(entity model.IEntity) bool {
+	if _, err := mogo.Collection(entity.Col()).InsertOne(context.TODO(), entity); err != nil {
+		logrus.Errorf("%v", err)
+		return false
+	}
+	return true
+}
+
+func UpdateOne(filter interface{}, entity model.IEntity) bool {
+	cnt, err := mogo.Collection(entity.Col()).UpdateOne(context.TODO(), filter, entity)
+	if err != nil {
+		return false
+	}
+	return cnt.ModifiedCount > 0
+}
+
+func UpdateMany(filter interface{}, entity model.IEntity) bool {
+	cnt, err := mogo.Collection(entity.Col()).UpdateMany(context.TODO(), filter, entity)
+	if err != nil {
+		return false
+	}
+	return cnt.ModifiedCount > 0
+}
+
+func ToStruct(bsonValue interface{}, res model.IEntity) error {
+	data, err := bson.Marshal(bsonValue)
+	if err != nil {
+		return err
+	}
+	err = bson.Unmarshal(data, res)
+	if err != nil {
 		return err
 	}
 	return nil
