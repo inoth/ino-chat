@@ -11,7 +11,7 @@ import (
 
 const (
 	// 房间列表
-	ROOMS = "INOCHAT:ROOMS"
+	// ROOMS = "INOCHAT:ROOMS"
 	// 房间详情
 	ROOMINFO = "INOCHAT:ROOMINFO:"
 	// 房间内成员

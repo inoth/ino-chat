@@ -10,7 +10,7 @@ const (
 )
 
 type MsgBody struct {
-	msgType   int32
+	msgType   int32 // 0:system  1:user
 	target    []string
 	Uid       string `json:"from"`
 	Timestamp int64  `json:"timestamp"`

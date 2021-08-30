@@ -76,6 +76,29 @@ func FindAll(filter interface{}, res model.IEntity) ([]bson.M, error) {
 	return r, nil
 }
 
+func FindAllLimit(filter interface{}, res model.IEntity, index, limit int64) ([]bson.M, error) {
+	ctx := context.TODO()
+	var findoptions *options.FindOptions
+	if limit > 0 {
+		findoptions.SetLimit(limit)
+		findoptions.SetSkip(limit * (index - 1))
+	}
+	cur, err := mogo.Collection(res.Col()).Find(ctx, filter, findoptions)
+	if err != nil {
+		return nil, errors.Wrap(err, "")
+	}
+	r := make([]bson.M, 0)
+	defer cur.Close(ctx)
+	for cur.Next(ctx) {
+		var tmp bson.M
+		if err = cur.Decode(&tmp); err != nil {
+			log.Fatal(err)
+		}
+		r = append(r, tmp)
+	}
+	return r, nil
+}
+
 func Create(entity model.IEntity) bool {
 	if _, err := mogo.Collection(entity.Col()).InsertOne(context.TODO(), entity); err != nil {
 		logrus.Errorf("%v", err)
@@ -98,6 +121,19 @@ func UpdateMany(filter interface{}, entity model.IEntity) bool {
 		return false
 	}
 	return cnt.ModifiedCount > 0
+}
+
+func Count(filter interface{}, entity model.IEntity) int {
+	count, _ := mogo.Collection(entity.Col()).CountDocuments(context.TODO(), filter)
+	return int(count)
+}
+
+func Delete(filter interface{}, entity model.IEntity) bool {
+	cnt, err := mogo.Collection(entity.Col()).DeleteMany(context.TODO(), filter)
+	if err != nil {
+		return false
+	}
+	return cnt.DeletedCount > 0
 }
 
 func ToStruct(bsonValue interface{}, res model.IEntity) error {

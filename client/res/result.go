@@ -48,6 +48,19 @@ func Result(code int, msg string, data ...interface{}) IResult {
 	return r
 }
 
+func ResultOK(msg ...string) IResult {
+	var r *ApiResult
+	if len(msg) > 0 {
+		r = &ApiResult{
+			Code: SUCCESS,
+			Msg:  msg[0],
+		}
+		return r
+	}
+	r = &ApiResult{Code: SUCCESS, Msg: "ok"}
+	return r
+}
+
 func OK(msg string, data ...interface{}) IResult {
 	if len(data) > 0 {
 		r := &ApiResultWithData{

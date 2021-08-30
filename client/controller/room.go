@@ -3,6 +3,7 @@ package controller
 import (
 	"inochat/client/cache"
 	"inochat/client/config"
+	"inochat/client/db"
 	"inochat/client/model"
 	"inochat/client/model/request"
 	"inochat/client/res"
@@ -11,10 +12,11 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/sirupsen/logrus"
+	"go.mongodb.org/mongo-driver/bson"
 )
 
 func RoomList(c *gin.Context) { // 换成 mongodb 中查询
-	rooms, err := cache.SMembers(config.ROOMS)
+	rooms, err := db.FindAll(nil, &model.RoomInfo{})
 	if err != nil {
 		c.JSON(404, res.NotFound("not found"))
 		return
@@ -36,11 +38,16 @@ func CreateRoom(c *gin.Context) {
 		RName: req.RoomName,
 	}
 	uid := c.Request.Header.Get("USER_ID")
-	err = cache.SAdd(config.ROOMS, rid) // 单纯缓存一个房间列表？
-	if err != nil {
+
+	if !db.Create(&model.RoomInfo{
+		Rid:   rid,
+		RName: req.RoomName,
+		Owner: uid,
+	}) {
 		c.JSON(500, res.Err("create room err"))
 		return
 	}
+
 	if !joinRoom(uid, rid) {
 		logrus.Warn("join room err")
 		c.JSON(500, res.Err("join room err"))
@@ -50,41 +57,54 @@ func CreateRoom(c *gin.Context) {
 }
 
 func JoinRoom(c *gin.Context) {
-	rid := c.PostForm("rid")
+	var req request.RoomOperateReq
+	err := c.BindJSON(&req)
+	if err != nil {
+		logrus.Errorf("%v", err)
+		c.JSON(400, res.ParamErr("param err"))
+		return
+	}
+
 	uid := c.Request.Header.Get("USER_ID")
 	// 检查房间合法性
-	if cache.SISMember(config.ROOMS, rid) == 0 {
+	if db.Count(bson.D{{"rid", req.Rid}}, &model.RoomInfo{}) == 0 {
 		logrus.Warn("invalid room")
 		c.JSON(400, res.ParamErr("invalid room"))
 		return
 	}
-	if !joinRoom(uid, rid) {
+	if !joinRoom(uid, req.Rid) {
 		logrus.Warn("join room err")
 		c.JSON(500, res.Err("join room err"))
 		return
 	}
-	c.JSON(200, res.OK("ok"))
+	c.JSON(200, res.ResultOK())
 }
 
 func ExitRoom(c *gin.Context) {
 	// 退出房间
-	rid := c.PostForm("rid")
+	var req request.RoomOperateReq
+	err := c.BindJSON(&req)
+	if err != nil {
+		logrus.Errorf("%v", err)
+		c.JSON(400, res.ParamErr("param err"))
+		return
+	}
 	uid := c.Request.Header.Get("USER_ID")
-	if cache.SISMember(config.ROOMS, rid) == 0 {
+	if db.Count(bson.D{{"rid", req.Rid}}, &model.RoomInfo{}) == 0 {
 		logrus.Warn("invalid room")
 		c.JSON(400, res.ParamErr("invalid room"))
 		return
 	}
 	// 该用户退出房间
-	_ = cache.SRem(config.ROOMMEMBERS+rid, uid)
+	_ = cache.SRem(config.ROOMMEMBERS+req.Rid, uid)
 	// 如果当前房间内人员为 0，直接删除该房间
-	if !cache.Exists(config.ROOMMEMBERS + rid) {
-		_ = cache.SRem(config.ROOMS, rid)
+	if !cache.Exists(config.ROOMMEMBERS + req.Rid) {
+		db.Delete(bson.D{{"rid", req.Rid}}, &model.RoomInfo{})
 		logrus.Info("房间内人数为0，默认解散")
 		c.JSON(200, res.OK("房间内人数为0"))
 		return
 	}
-	users, err := cache.SMembers(config.ROOMMEMBERS + rid)
+	users, err := cache.SMembers(config.ROOMMEMBERS + req.Rid)
 	if err != nil {
 		logrus.Warn("invalid room members")
 		c.JSON(400, res.ParamErr("invalid room members"))
@@ -96,16 +116,45 @@ func ExitRoom(c *gin.Context) {
 		FromUser: uid,
 		Body:     "用户" + uid + "退出房间",
 	})
-	c.JSON(200, res.OK("ok"))
+	c.JSON(200, res.ResultOK())
 }
 
-func RemoveRoom(C *gin.Context) {
-
+func RemoveRoom(c *gin.Context) {
+	var req request.RoomOperateReq
+	err := c.BindJSON(&req)
+	if err != nil {
+		logrus.Errorf("%v", err)
+		c.JSON(400, res.ParamErr("param err"))
+		return
+	}
+	if !removeRoom(req.Rid) {
+		c.JSON(500, res.Err("invalid room"))
+		return
+	}
+	c.JSON(200, res.ResultOK())
 }
 
 func SendMsg(c *gin.Context) {
 	// 给当前用户所在房间所有用户发送消息
-
+	var req request.RoomOperateReq
+	err := c.BindJSON(&req)
+	if err != nil {
+		logrus.Errorf("%v", err)
+		c.JSON(400, res.ParamErr("param err"))
+		return
+	}
+	uid := c.Request.Header.Get("USER_ID")
+	users, err := cache.SMembers(config.ROOMMEMBERS + req.Rid)
+	if err != nil {
+		logrus.Error(err.Error())
+		return
+	}
+	sendMsg(&model.MessageNsqBody{
+		MsgType:  1, // user msg
+		Target:   users,
+		FromUser: uid,
+		Body:     req.Msg,
+	})
 }
 
 func joinRoom(uid, rid string) bool {
@@ -130,6 +179,10 @@ func joinRoom(uid, rid string) bool {
 }
 
 func removeRoom(rid string) bool {
+	if !db.Delete(bson.D{{"rid", rid}}, &model.RoomInfo{}) {
+		return false
+	}
+	cache.Del(config.ROOMMEMBERS + rid)
 	return true
 }
 
