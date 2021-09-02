@@ -29,9 +29,12 @@ type Config struct {
 		Host   string `yaml:"Host"`
 		Passwd string `yaml:"Passwd"`
 	} `yaml:"Redis"`
-	MongoDB string `yaml:"MongoDB"`
-	Consul  string `yaml:"Consul"`
-	Nsq     string `yaml:"Nsq"`
+	MongoDB struct {
+		Host     string `yaml:"Host"`
+		DataBase string `yaml:"DataBase"`
+	} `yaml:"MongoDB"`
+	Consul string `yaml:"Consul"`
+	Nsq    string `yaml:"Nsq"`
 }
 
 func Instance() *Config {

@@ -19,7 +19,7 @@ func InitProducer() {
 		logrus.Errorf("%v", err)
 		logrus.Panic(err.Error())
 	}
-
+	logrus.Info("connect nsq.")
 	defer func() {
 		defer pro.Stop()
 		close(CH_msg)

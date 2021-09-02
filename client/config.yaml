@@ -3,5 +3,7 @@ Redis:
   Host: 
   Passwd: 
 MongoDB: 
+  DataBase:
+  Host:  
 Consul: 
 Nsq: 

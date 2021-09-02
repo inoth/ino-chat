@@ -38,11 +38,11 @@ func GetConn() redis.Conn {
 func Get(key string) (string, error) {
 	conn := GetConn()
 	defer conn.Close()
-	cache, err := redis.String(conn.Do("GET", key))
+	r, err := redis.String(conn.Do("GET", key))
 	if err != nil {
 		return "", errors.Wrap(err, "")
 	}
-	return cache, nil
+	return r, nil
 }
 
 func Del(key string) error {
@@ -58,7 +58,6 @@ func Del(key string) error {
 func Set(key, val string, expire ...int) error {
 	conn := GetConn()
 	defer conn.Close()
-
 	err := conn.Send("SET", key, val)
 	if err != nil {
 		return errors.Wrap(err, "")
@@ -82,24 +81,34 @@ func Set(key, val string, expire ...int) error {
 func Lindex(key string, index int) (string, error) {
 	conn := GetConn()
 	defer conn.Close()
-	cache, err := redis.String(conn.Do("LINDEX", key, index))
+	r, err := redis.String(conn.Do("LINDEX", key, index))
 	if err != nil {
 		return "", errors.Wrap(err, "")
 	}
-	return cache, nil
+	return r, nil
 }
 
 func Len(key string) int {
 	conn := GetConn()
 	defer conn.Close()
-	cache, err := redis.Int(conn.Do("LLEN", key))
+	r, err := redis.Int(conn.Do("LLEN", key))
 	if err != nil {
 		return 0
 	}
-	return cache
+	return r
 }
 
-// list
+func Exists(key string) bool {
+	conn := GetConn()
+	defer conn.Close()
+	r, _ := redis.Int(conn.Do("EXISTS", key))
+	if r <= 0 {
+		return false
+	}
+	return true
+}
+
+//------------------LIST----------------------
 func LPush(key string, val ...string) error {
 	conn := GetConn()
 	defer conn.Close()
@@ -113,15 +122,15 @@ func LPush(key string, val ...string) error {
 func RPop(key string) (string, error) {
 	conn := GetConn()
 	defer conn.Close()
-	cache, err := redis.String(conn.Do("RPOP", key))
+	r, err := redis.String(conn.Do("RPOP", key))
 	if err != nil {
 		return "", errors.Wrap(err, "")
 	}
-	return cache, nil
+	return r, nil
 }
 
-// set
-func SAdd(key string, val ...string) error {
+//------------------SET----------------------
+func SAdd(key string, val string) error {
 	conn := GetConn()
 	defer conn.Close()
 	_, err := conn.Do("SADD", key, val)
@@ -135,42 +144,73 @@ func SAdd(key string, val ...string) error {
 func Scard(key string) int {
 	conn := GetConn()
 	defer conn.Close()
-	cache, err := redis.Int(conn.Do("SCARD", key))
+	r, err := redis.Int(conn.Do("SCARD", key))
 	if err != nil {
 		return 0
 	}
-	return cache
+	return r
 }
 
 // 判断是否存在于当前集合中
-func SISMember(key string) int {
+func SISMember(key, member string) int {
 	conn := GetConn()
 	defer conn.Close()
-	cache, err := redis.Int(conn.Do("SISMEMBER", key))
+	r, err := redis.Int(conn.Do("SISMEMBER", key, member))
 	if err != nil {
 		return 0
 	}
-	return cache
+	return r
 }
 
 // 获取成员列表
 func SMembers(key string) ([]string, error) {
 	conn := GetConn()
 	defer conn.Close()
-	cache, err := redis.Strings(conn.Do("SMEMBERS", key))
+	r, err := redis.Strings(conn.Do("SMEMBERS", key))
 	if err != nil {
 		return nil, errors.Wrap(err, "")
 	}
-	return cache, nil
+	return r, nil
 }
 
 // 删除一个成员
-func SRem(key string) error {
+func SRem(key, member string) error {
 	conn := GetConn()
 	defer conn.Close()
-	_, err := conn.Do("SREM", key)
+	_, err := conn.Do("SREM", key, member)
 	if err != nil {
 		return errors.Wrap(err, "")
 	}
 	return nil
+}
+
+//------------------HASH----------------------
+func HMSet(key string, val interface{}) error {
+	conn := GetConn()
+	defer conn.Close()
+	_, err := conn.Do("HMSET", redis.Args{}.Add(key).AddFlat(&val)...)
+	if err != nil {
+		return errors.Wrap(err, "")
+	}
+	return nil
+}
+
+func HSet(key string, val map[string]interface{}) error {
+	conn := GetConn()
+	defer conn.Close()
+	_, err := conn.Do("HSET", redis.Args{}.Add(key).AddFlat(&val)...)
+	if err != nil {
+		return errors.Wrap(err, "")
+	}
+	return nil
+}
+
+func HGetAll(key string) (map[string]string, error) {
+	conn := GetConn()
+	defer conn.Close()
+	r, err := redis.StringMap(conn.Do(key))
+	if err != nil {
+		return nil, errors.Wrap(err, "")
+	}
+	return r, nil
 }

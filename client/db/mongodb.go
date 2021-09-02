@@ -3,7 +3,7 @@ package db
 import (
 	"context"
 	"inochat/client/config"
-	"inochat/client/db/model"
+	"inochat/client/db/entity"
 	"os"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -33,7 +33,10 @@ var (
 // }
 
 func init() {
-	mongoClient, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(config.Instance().MongoDB))
+	logrus.Info(config.Instance().MongoDB.Host)
+	logrus.Info(config.Instance().MongoDB.DataBase)
+
+	mongoClient, err := mongo.Connect(context.TODO(), options.Client().ApplyURI(config.Instance().MongoDB.Host))
 	if err != nil {
 		log.Errorf("%v", err)
 		os.Exit(1)
@@ -43,7 +46,7 @@ func init() {
 		os.Exit(1)
 	}
 
-	db := mongoClient.Database("wechat_util")
+	db := mongoClient.Database(config.Instance().MongoDB.DataBase)
 	mogo = db
 }
 
@@ -51,14 +54,14 @@ func GetDb() *mongo.Database {
 	return mogo
 }
 
-func FindOne(filter interface{}, res model.IEntity) error {
+func FindOne(filter interface{}, res entity.IEntity) error {
 	if err := mogo.Collection(res.Col()).FindOne(context.TODO(), filter).Decode(res); err != nil {
 		return errors.Wrap(err, "")
 	}
 	return nil
 }
 
-func FindAll(filter interface{}, res model.IEntity) ([]bson.M, error) {
+func FindAll(filter interface{}, res entity.IEntity) ([]bson.M, error) {
 	ctx := context.TODO()
 	cur, err := mogo.Collection(res.Col()).Find(ctx, filter)
 	if err != nil {
@@ -76,7 +79,7 @@ func FindAll(filter interface{}, res model.IEntity) ([]bson.M, error) {
 	return r, nil
 }
 
-func FindAllLimit(filter interface{}, res model.IEntity, index, limit int64) ([]bson.M, error) {
+func FindAllLimit(filter interface{}, res entity.IEntity, index, limit int64) ([]bson.M, error) {
 	ctx := context.TODO()
 	var findoptions *options.FindOptions
 	if limit > 0 {
@@ -99,7 +102,7 @@ func FindAllLimit(filter interface{}, res model.IEntity, index, limit int64) ([]
 	return r, nil
 }
 
-func Create(entity model.IEntity) bool {
+func Create(entity entity.IEntity) bool {
 	if _, err := mogo.Collection(entity.Col()).InsertOne(context.TODO(), entity); err != nil {
 		logrus.Errorf("%v", err)
 		return false
@@ -107,7 +110,7 @@ func Create(entity model.IEntity) bool {
 	return true
 }
 
-func UpdateOne(filter interface{}, entity model.IEntity) bool {
+func UpdateOne(filter interface{}, entity entity.IEntity) bool {
 	cnt, err := mogo.Collection(entity.Col()).UpdateOne(context.TODO(), filter, entity)
 	if err != nil {
 		return false
@@ -115,7 +118,7 @@ func UpdateOne(filter interface{}, entity model.IEntity) bool {
 	return cnt.ModifiedCount > 0
 }
 
-func UpdateMany(filter interface{}, entity model.IEntity) bool {
+func UpdateMany(filter interface{}, entity entity.IEntity) bool {
 	cnt, err := mogo.Collection(entity.Col()).UpdateMany(context.TODO(), filter, entity)
 	if err != nil {
 		return false
@@ -123,12 +126,12 @@ func UpdateMany(filter interface{}, entity model.IEntity) bool {
 	return cnt.ModifiedCount > 0
 }
 
-func Count(filter interface{}, entity model.IEntity) int {
+func Count(filter interface{}, entity entity.IEntity) int {
 	count, _ := mogo.Collection(entity.Col()).CountDocuments(context.TODO(), filter)
 	return int(count)
 }
 
-func Delete(filter interface{}, entity model.IEntity) bool {
+func Delete(filter interface{}, entity entity.IEntity) bool {
 	cnt, err := mogo.Collection(entity.Col()).DeleteMany(context.TODO(), filter)
 	if err != nil {
 		return false
@@ -136,7 +139,7 @@ func Delete(filter interface{}, entity model.IEntity) bool {
 	return cnt.DeletedCount > 0
 }
 
-func ToStruct(bsonValue interface{}, res model.IEntity) error {
+func ToStruct(bsonValue interface{}, res entity.IEntity) error {
 	data, err := bson.Marshal(bsonValue)
 	if err != nil {
 		return err

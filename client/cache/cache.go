@@ -130,7 +130,7 @@ func RPop(key string) (string, error) {
 }
 
 //------------------SET----------------------
-func SAdd(key string, val ...string) error {
+func SAdd(key string, val string) error {
 	conn := GetConn()
 	defer conn.Close()
 	_, err := conn.Do("SADD", key, val)
