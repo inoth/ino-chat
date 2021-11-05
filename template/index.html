@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script>
+        window.addEventListener("load", function (evt) {
+
+            var output = document.getElementById("output");
+            var input = document.getElementById("input");
+            var ws;
+            var print = function (message) {
+                var d = document.createElement("div");
+                d.textContent = message;
+                output.appendChild(d);
+                output.scroll(0, output.scrollHeight);
+            };
+            // document.getElementById("open").onclick = function (evt) {
+            if (ws) {
+                return false;
+            }
+            ws = new WebSocket((window.location.protocol === 'https:' ? 'wss' : 'ws') + "://" + window.location.host + "/ws");
+            ws.onopen = function (evt) {
+                print("OPEN");
+            }
+            ws.onclose = function (evt) {
+                print("CLOSE");
+
+                // 直接通过http发送消息
+                // var xhr = new XMLHttpRequest();
+                // xhr.onerror = function () {
+                //     print("EXIT ERROR.");
+                // }
+                // xhr.open("post", "/api/room/testroom/exit", true)
+                // xhr.setRequestHeader("Content-Type", "application/json");
+                // xhr.send(null);
+
+                ws = null;
+                return false;
+            }
+            ws.onmessage = function (evt) {
+                print("RESPONSE: " + evt.data);
+            }
+            ws.onerror = function (evt) {
+                print("ERROR: " + evt.data);
+            }
+
+            // };
+            document.getElementById("send").onclick = function (evt) {
+                if (!ws) {
+                    return false;
+                }
+                print("SEND: " + input.value);
+                // ws.send(input.value);
+
+                // 直接通过http发送消息
+                var xhr = new XMLHttpRequest();
+                xhr.onerror = function () {
+                    print("SEND ERROR.");
+                }
+                var data = {
+                    target: "testroom",
+                    targetType: "room",
+                    msg: input.value,
+                    msgType: "text",
+                };
+                xhr.open("post", "/api/msg/send", true)
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.send(JSON.stringify(data));
+                return false;
+            };
+            document.getElementById("close").onclick = function (evt) {
+                if (!ws) {
+                    return false;
+                }
+                ws.close();
+
+                // 直接通过http发送消息
+                var xhr = new XMLHttpRequest();
+                xhr.onerror = function () {
+                    print("EXIT ERROR.");
+                }
+                xhr.open("post", "/api/room/exit/testroom", true)
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.send(null);
+
+                return false;
+            };
+        });
+    </script>
+</head>
+
+<body>
+    <table>
+        <tr>
+            <td valign="top" width="50%">
+                <p>
+                    点击“close”断开连接
+                <p>
+                <p>
+                    点击“send”发送消息，不出意外可以在另一个窗口看到消息推送
+                </p>
+                <p>
+                    仓库地址：
+                    <a href="https://github.com/inoth/ino-chat" target="_blank">github</a>
+                </p>
+                <form>
+                    <!-- <button id="open">Open</button> -->
+                    <button id="close">Close</button>
+                    <p><input id="input" type="text" value="Hello world!">
+                        <button id="send">Send</button>
+                </form>
+            </td>
+            <td valign="top" width="50%">
+                <div id="output" style="max-height: 70vh;overflow-y: scroll;"></div>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>

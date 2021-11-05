@@ -1,0 +1,5 @@
+ServerPort: :80
+Redis:
+  Host: 
+  Passwd: 
+Nsq:

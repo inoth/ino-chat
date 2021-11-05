@@ -1,0 +1,36 @@
+name: Go
+
+on:
+  push:
+    branches: [ live ]
+
+env:
+  REGION_ID: cn-shanghai
+  REGISTRY: registry.cn-shanghai.aliyuncs.com
+  NAMESPACE: inohub
+  IMAGE: ino-chat
+  TAG: ${{ github.sha }}
+  USER_NAME: ${{ secrets.ALIYUN_USER }}
+  PASSWD: ${{ secrets.ALIYUN_PASSWD }}
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Go
+      uses: actions/setup-go@v2
+      with:
+        go-version: 1.16
+
+    - name: Build
+      run: |
+        go mod download
+        CGO_ENABLED=0 GOOS=linux go build -a -installsuffix cgo -o release/ino-chat .
+        cp Dockerfile .dockerignore config.yaml ./release/.
+        cp -r template ./release/.
+        cd ./release
+        docker login --username=$USER_NAME $REGISTRY --password=$PASSWD
+        docker build --tag "$REGISTRY/$NAMESPACE/$IMAGE:${TAG::8}" .  
+        docker push "$REGISTRY/$NAMESPACE/$IMAGE:${TAG::8}"    

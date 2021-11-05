@@ -1,0 +1,108 @@
+definitions:
+  models.NewRoomBody:
+    properties:
+      title:
+        type: string
+    type: object
+  res.ApiResult:
+    properties:
+      code:
+        type: integer
+      msg:
+        type: string
+    type: object
+info:
+  contact: {}
+paths:
+  /api/login:
+    post:
+      consumes:
+      - application/json
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/res.ApiResult'
+      summary: 登录接口
+      tags:
+      - 登录
+  /api/room:
+    get:
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/res.ApiResult'
+      summary: 查询房间列表
+      tags:
+      - 房间相关
+  /api/room/{rid}/join:
+    post:
+      parameters:
+      - description: 用户令牌
+        in: header
+        name: Authorization
+        type: string
+      - description: 房间id
+        in: path
+        name: rid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/res.ApiResult'
+      summary: 加入房间
+      tags:
+      - 房间相关
+  /api/room/exit/{rid}:
+    post:
+      parameters:
+      - description: 用户令牌
+        in: header
+        name: Authorization
+        type: string
+      - description: 房间id
+        in: path
+        name: rid
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/res.ApiResult'
+      summary: 退出房间
+      tags:
+      - 房间相关
+  /api/room/new:
+    post:
+      consumes:
+      - application/json
+      parameters:
+      - description: 创建房间body
+        in: body
+        name: object
+        required: true
+        schema:
+          $ref: '#/definitions/models.NewRoomBody'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/res.ApiResult'
+      summary: 创建房间
+      tags:
+      - 房间相关
+swagger: "2.0"

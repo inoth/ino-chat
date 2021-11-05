@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <script>
+        window.addEventListener("load", function (evt) {
+            document.getElementById("login").onclick = function (evt) {
+                // 直接通过http发送消息
+                document.getElementById("login").disabled = true;
+
+
+                var xhr = new XMLHttpRequest();
+
+                xhr.onerror = function () {
+                    print("SEND ERROR.");
+                };
+
+                xhr.onload = function () {
+                    document.getElementById("login").disabled = false;
+                   
+                    window.location.href = "/chat";
+                };
+
+                xhr.open("post", "/api/login", true);
+                xhr.setRequestHeader("Content-Type", "application/json");
+                xhr.send(null);
+                return false;
+            };
+        });
+    </script>
+</head>
+
+<body>
+    <table>
+        <tr>
+            <td valign="top" width="50%">
+                <p>
+                    打开不同类型的两个浏览器，点击“login”来试试简单聊天应用
+                <p>
+                <form>
+                    <button id="login">Login</button>
+                </form>
+            </td>
+        </tr>
+    </table>
+</body>
+
+</html>
