@@ -10,7 +10,7 @@ import (
 func SaveUserInCache(uid string) bool {
 	err := cache.HMSet(util.UserInfoKey+uid, map[string]interface{}{
 		"uid": uid,
-	}, 60*60*24)
+	}, 60*60*24*1000)
 	if err != nil {
 		log.Errorf("login err: %v", err)
 		return false
