@@ -199,7 +199,7 @@ func HMSet(key string, val interface{}, expire ...int) error {
 	conn.Send("MULTI")
 	err := conn.Send("HMSET", redis.Args{}.Add(key).AddFlat(val)...)
 	if len(expire) > 0 {
-		conn.Send("PEXPIRE")
+		conn.Send("PEXPIRE", key, expire[0])
 	}
 	_, err = conn.Do("EXEC")
 	if err != nil {
